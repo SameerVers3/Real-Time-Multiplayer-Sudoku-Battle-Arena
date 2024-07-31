@@ -1,4 +1,4 @@
-import React, { useState, ChangeEvent } from 'react';
+import React, { useState, useRef, ChangeEvent, useEffect } from 'react';
 
 // Define the type for the Sudoku board
 type Board = number[][];
@@ -18,8 +18,16 @@ const generateBoard = (): Board => {
   ];
 };
 
+type  SelectedBox = {
+  row?: Number;
+  column?: Number
+}
+
 const Sudoku: React.FC = () => {
+
   const [board, setBoard] = useState<Board>(generateBoard());
+  const [selected, setSelected] = useState<SelectedBox>();
+  const sudokuRef = useRef<HTMLDivElement>(null);
 
   // Handle changes in input fields
   const handleChange = (row: number, col: number, value: string) => {
@@ -42,23 +50,54 @@ const Sudoku: React.FC = () => {
     }
   };
 
+  const handleClick = (event: React.MouseEvent<HTMLElement>) => {
+    const id = (event.target as HTMLElement).id;
+    const [row, col] = id.split("-").map(Number);
+
+    if (board[row][col] !== 0) {
+      return;
+    }
+
+    setSelected({
+      row,
+      column: col
+    });
+  };
+
+  const isSelected = (row: number, col: number) => {
+    return selected?.row === row && selected?.column === col ? "border-blue-200 bg-blue-200" : "";
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if ((event.target as HTMLElement).id !== "board") {
+        setSelected({});
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   return (
     <div className="p-4 w-[530px] h-[530px]">
       <h1 className="text-3xl font-bold mb-4">Sudoku</h1>
-      <div className="grid grid-cols-9 gap-1 border p-2">
+      <div id="board" className="grid grid-cols-9 gap-1 border p-2">
         {board.map((row, rowIndex) =>
-          row.map((cell, colIndex) => (
-            <input
+          row.map((cell, colIndex) => {
+            return <div
               key={`${rowIndex}-${colIndex}`}
-              type="text"  // Use type="text" to prevent arrow key changes
-              maxLength={1} // Limit input length to one character
-              value={cell || ''}
+              id={`${rowIndex}-${colIndex}`}
               onChange={handleInputChange(rowIndex, colIndex)}
               onKeyDown={handleKeyDown}  // Handle key down events
-              disabled={cell !== 0}  // Disable input for already filled cells
-              className="w-12 h-12 text-center text-lg border border-gray-300 rounded-lg bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          ))
+              onClick={handleClick}
+              className={`w-12 h-12 flex justify-center items-center text-lg border border-gray-300 rounded-lg bg-gray-100 ${cell ? "cursor-not-allowed" : "cursor-pointer"} ${isSelected(rowIndex, colIndex)}`}
+            >
+              {cell ? cell : ""}
+            </div>
+          })
         )}
       </div>
     </div>
