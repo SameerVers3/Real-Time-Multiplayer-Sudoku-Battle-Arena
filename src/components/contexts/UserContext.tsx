@@ -1,5 +1,5 @@
 import {createContext, ReactNode, useContext, useReducer} from "react";
-import { User } from "firebase/auth";
+import { User, signOut, getAuth } from "firebase/auth";
 
 type AuthActions = { type: 'SIGN_IN', payload: { user: User } } | {type: 'SIGN_OUT'}
 
@@ -63,11 +63,19 @@ const useSignIn = () => {
 
 const useSignOut = () => {
   const {dispatch} = useContext(AuthContext)
-  return {
-    signOut: () => {
-      dispatch({type: "SIGN_OUT"})
+
+  const signOutUser = async () => {
+    try {
+      await signOut(getAuth()); // Use signOut directly from the Firebase v9+ API
+      console.log("done sir")
+      dispatch({ type: "SIGN_OUT" });
+      // Optionally, add logic to navigate to a login or home page
+    } catch (error) {
+      console.error("Sign out error:", error);
     }
-  }
+  };
+
+  return { signOut: signOutUser };
 }
 
 export { useAuthState, useSignIn, useSignOut, AuthProvider };

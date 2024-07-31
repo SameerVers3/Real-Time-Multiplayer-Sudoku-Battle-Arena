@@ -1,13 +1,27 @@
 import react from "react"
-
-
+import {useAuthState, useSignOut} from "../contexts/UserContext"
+import { Link } from "react-router-dom"
 
 const Nav = () => { 
 
+  const links = [
+    {
+      link: "/challenge",
+      name: "Challenge",
+      icon: ""
+    },
+    {
+      link: "/play",
+      name: "Play",
+      icon: ""
+    }
+  ]
+
+  const {state} = useAuthState();
+  const { signOut } = useSignOut();
+
   const handleLogout = () => {
-
-
-
+    signOut();
   }
 
   return (
@@ -18,23 +32,42 @@ const Nav = () => {
         </div>
 
         <div>
-          Linkssssssssss
+          {
+            links.map((link) => {
+              return <Link key={link.link} to={link.link} className="hover:text-blue-500">
+              {link.name}
+            </Link>
+            })
+          }
         </div>
 
         <div>
-        <div className="dropdown dropdown-hover">
-          <div className="avatar h-12 w-12">
-            <div className="w-24 rounded-full">
-              <img src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp" />
+
+        {
+          state.state == "SIGNED_IN" ? 
+          <div className="flex items-center gap-2">
+            <div>
+              {state.currentUser.displayName}
+            </div>
+            <div className="dropdown dropdown-hover dropdown-end">
+              <div className="avatar h-12 w-12">
+                <div className="w-24 rounded-full">
+                  <img src={state.currentUser.photoURL} />
+                </div>
+              </div>
+
+              <ul tabIndex={0} className="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow">
+                <li><button onClick={handleLogout}>Logout</button></li>
+                {/* <li><a>Item 2</a></li> */}
+              </ul>
+              
             </div>
           </div>
-
-          <ul tabIndex={0} className="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow">
-            <li><a>Logout</a></li>
-            {/* <li><a>Item 2</a></li> */}
-          </ul>
-          
-        </div>
+          : 
+          <div className="">
+            Login / Sign in
+          </div>
+        }
 
           
         </div>

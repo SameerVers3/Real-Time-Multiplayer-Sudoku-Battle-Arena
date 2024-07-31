@@ -8,6 +8,8 @@ const Loading = () => <p className="p-4 w-full h-full text-center">Loading...</p
 const IndexScreen = lazy(() => import('~/components/screens/Index'));
 const Page404Screen = lazy(() => import('~/components/screens/404'));
 const AuthScreen = lazy(() =>  import('~/components/screens/Auth'));
+const Challenge = lazy(() =>  import('~/components/screens/Challenge'));
+const Play = lazy(() => import('~/components/screens/Play'));
 
 function Layout() {
   return (
@@ -47,6 +49,26 @@ const InnerRouter = () => {
           path: '*',
           element: <Page404Screen />,
         },
+      ],
+    },
+    {
+      path: '/challenge',
+      element: <Layout />,
+      children: [
+        {
+          index: true,
+          element: <Challenge/>,
+        }
+      ],
+    },
+    {
+      path: '/play',
+      element: <Layout />,
+      children: [
+        {
+          index: true,
+          element: <Play/>,
+        }
       ],
     },
   ];

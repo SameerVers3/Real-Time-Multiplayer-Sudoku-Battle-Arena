@@ -4,6 +4,8 @@ import { useAuthState } from '~/components/contexts/UserContext';
 import { SignInButton } from '~/components/domain/auth/SignInButton';
 import { SignOutButton } from '~/components/domain/auth/SignOutButton';
 import { Head } from '~/components/shared/Head';
+import RecentlyPlayed from "~/components/ui/RecentlyPlayed"
+import HeroCard from "~/components/ui/HeroCard"
 
 function Index() {
   const { state } = useAuthState();
@@ -13,8 +15,10 @@ function Index() {
   return (
     <>
       <Head title="TOP PAGE" />
-      <div className="hero min-h-screen">
-        jeif
+
+      <div className='flex w-full border justify-between flex-row'>
+        <HeroCard/>
+        <RecentlyPlayed/>
       </div>
     </>
   );
