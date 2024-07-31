@@ -13,6 +13,7 @@ function Main() {
     const auth = getAuth();
 
     onAuthStateChanged(auth, (user) => {
+      console.log(user);
       if (user) {
         signIn(user);
       } else {
