@@ -1,6 +1,6 @@
 import react from "react"
-import {useAuthState, useSignOut} from "../contexts/UserContext"
 import { Link } from "react-router-dom"
+import {useAuthState, useSignOut} from "../contexts/UserContext"
 
 const Nav = () => { 
 
