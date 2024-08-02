@@ -27,7 +27,7 @@ const ProgressBoard: React.FC<ProgressBoardProps> = ({ board }) => {
       key={`${rowIndex}-${cellIndex}`}
       className={`w-5 h-5 flex justify-center items-center text-[6px] font-medium ${isFilled(rowIndex, cellIndex)}`}
     >
-      {board.grid[rowIndex][cellIndex] !== 0 ? board.grid[rowIndex][cellIndex] : ''}
+      {/* {board.grid[rowIndex][cellIndex] !== 0 ? board.grid[rowIndex][cellIndex] : ''} */}
     </div>
   );
 
@@ -40,28 +40,32 @@ const ProgressBoard: React.FC<ProgressBoardProps> = ({ board }) => {
   );
 
   const updateProgress = () => {
-    let totalCells = 0;
+    let solableCells = 0;
     let correctCells = 0;
+    let actualCount = 0;
   
     board.grid.forEach((row, rowIndex) => {
       row.forEach((cell, colIndex) => {
         if (cell !== 0) {
-          totalCells++;
-          if (cell === board.solution[rowIndex][colIndex]) {
+          if (cell === board.solution[rowIndex][colIndex] && cell !== board.actual[rowIndex][colIndex]) {
             correctCells++;
           }
+          else {
+            actualCount++
+          }
+        }
+        else {
+          solableCells++;
         }
       });
     });
   
-    // Calculate progress as a percentage
-    const progressPercentage = totalCells > 0 ? (correctCells / totalCells) * 100 : 0;
-    // setInterval(() => {
-    //   console.log(progress)
-    // }, 1000)
+    let progressPercentage = correctCells / (81 - actualCount) * 100; 
+  
     // Update the progress state
-    setProgress(progressPercentage);
+    setProgress(Math.round(progressPercentage));
   };
+  
   
 
   useEffect(() => {

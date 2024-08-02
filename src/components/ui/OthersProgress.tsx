@@ -80,7 +80,6 @@ const OthersProgress: React.FC<{ roomId: string | undefined }> = ({ roomId }) =>
 
   return (
     <div className='border mb-12'>
-      <h1 className="text-3xl font-bold mb-4">Others' Progress</h1>
       {authError && <p>{authError}</p>}
       {loading ? (
         <p>Loading progress...</p>

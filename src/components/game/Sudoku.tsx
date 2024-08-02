@@ -106,7 +106,7 @@ const Sudoku: React.FC<SudokuProps> = ({ board: initialBoard, onCellChange, decr
     <div className="p-4 max-w-[400px] mx-auto">
       <h1 className="text-3xl font-bold mb-4 text-center">Sudoku</h1>
       
-      <div id="board" className="flex flex-col justify-center items-center mb-4 ">
+      <div id="board" className="flex flex-col justify-center items-center mb-4">
         {board.grid.map((row, rowIndex) => (
           <div key={rowIndex} className="flex">
             {row.map((cell, colIndex) => (

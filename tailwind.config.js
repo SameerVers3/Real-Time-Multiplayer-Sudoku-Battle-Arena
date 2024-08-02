@@ -1,4 +1,3 @@
-
 module.exports = {
   mode: 'jit',
   purge: {
@@ -25,7 +24,9 @@ module.exports = {
   ],
   daisyui: {
     themes: [
-      'emerald'
+      'light',  // Default theme
+      'dark',   // Dark theme
+      'retro', // Your additional theme
     ],
   }
 }

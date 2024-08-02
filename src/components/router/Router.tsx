@@ -13,7 +13,7 @@ const Play = lazy(() => import('~/components/screens/Play'));
 
 function Layout() {
   return (
-    <div>
+    <div className=''>
       <Nav/>
       <Outlet />
     </div>

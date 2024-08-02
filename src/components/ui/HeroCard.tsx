@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import CreateRoomModal from "./CreateRoomModal";
+import JoinRoomModal from "./JoinRoomModal";
 import { useAuthState } from "../contexts/UserContext";
 import { collection, doc, setDoc } from "firebase/firestore";
 import { useFirestore } from "~/lib/firebase";
@@ -39,6 +40,11 @@ const HeroCard: React.FC = () => {
 
   const handleCreateRoom = () => {
     const element = document.getElementById("create-room-modal") as HTMLDialogElement;
+    element?.showModal();
+  }
+
+  const handleJoinRoom = () => {
+    const element = document.getElementById("join-room-modal") as HTMLDialogElement;
     element?.showModal();
   }
 
@@ -90,7 +96,7 @@ const HeroCard: React.FC = () => {
           <button className="btn btn-wide">Create Solo Game</button>
           <div className="divider">or</div>
           <button className="btn btn-wide" onClick={handleCreateRoom}>Create a Room</button>
-          <button className="btn btn-wide">Join a Room</button>
+          <button className="btn btn-wide" onClick={handleJoinRoom}>Join a Room</button>
         </div>
       </div>
 
@@ -102,6 +108,7 @@ const HeroCard: React.FC = () => {
         loading={loading}
         setRoomID={setRoomID}
       />
+      <JoinRoomModal/>
     </div>
   );
 }
