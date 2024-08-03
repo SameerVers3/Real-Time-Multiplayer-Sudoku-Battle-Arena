@@ -2,11 +2,12 @@ import React, { useState, useEffect, MouseEvent, CSSProperties, KeyboardEvent } 
 import { useTheme } from '../contexts/UserContext';
 import OptionGrid from '../ui/OptionGrid';
 import BoardDetails from '../ui/BoardDetails';
+import RoomId from '../ui/RoomId';
 
 type Board = {
   grid: number[][];
   solution: number[][];
-  actual: number[][];
+  actual?: number[][];
 };
 
 type SelectedBox = {
@@ -20,11 +21,12 @@ interface SudokuProps {
   decreaseLive: () => void;
   totalLives: number; // New prop
   remainingLives: number; // New prop
+  roomId: string;
 }
 
 const options: number[] = [1, 2, 3, 4, 5, 6, 7, 8, 9];
 
-const Sudoku: React.FC<SudokuProps> = ({ board: initialBoard, onCellChange, decreaseLive, totalLives, remainingLives }) => {
+const Sudoku: React.FC<SudokuProps> = ({ board: initialBoard, onCellChange, decreaseLive, totalLives, remainingLives, roomId }) => {
   const [board, setBoard] = useState<Board>(initialBoard);
   const [selected, setSelected] = useState<SelectedBox | undefined>();
   const [wrong, setWrong] = useState<SelectedBox | undefined>();
@@ -42,10 +44,10 @@ const Sudoku: React.FC<SudokuProps> = ({ board: initialBoard, onCellChange, decr
   };
 
   const getCellStyle = (row: number, col: number): string => {
-    let baseStyle = "w-8 h-8 flex justify-center items-center text-lg m-[1px] rounded-lg shadow-sm transition-all duration-100 ";
+    let baseStyle = "w-9 h-9 flex justify-center items-center text-lg m-[1px] rounded-lg shadow-sm transition-all duration-100 ";
     
     if (theme === 'light') {
-      if (board.grid[row][col] === board.solution[row][col] && board.actual[row][col] === 0) {
+      if (board.grid[row][col] === board.solution[row][col] && board.actual && board.actual[row][col] === 0) {
         baseStyle += "bg-emerald-100 text-emerald-700 ";
       } else if ((row === wrong?.row && col === wrong.column) && (selected?.row === row && selected?.column === col)) {
         baseStyle += "bg-sky-500 text-sky-200 ";
@@ -57,7 +59,7 @@ const Sudoku: React.FC<SudokuProps> = ({ board: initialBoard, onCellChange, decr
         baseStyle += "bg-zinc-100 hover:bg-gray-200 text-gray-700 ";
       }
     } else {
-      if (board.grid[row][col] === board.solution[row][col] && board.actual[row][col] === 0) {
+      if (board.grid[row][col] === board.solution[row][col] && board.actual && board.actual[row][col] === 0) {
         baseStyle += "bg-emerald-900 text-emerald-200 ";
       } else if (row === wrong?.row && col === wrong.column) {
         baseStyle += "bg-rose-900 text-rose-200 ";
@@ -199,16 +201,17 @@ const Sudoku: React.FC<SudokuProps> = ({ board: initialBoard, onCellChange, decr
   
 
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as HTMLElement;
-      if (target.id.split('-')[1] === "optionBtn") return;
-      if (target.id !== "board") {
+    const handleClickOutside: EventListener = (event: Event) => {
+      const mouseEvent = event as unknown as MouseEvent;
+      const target = mouseEvent.target as HTMLElement;
+      if (target.id.split('-')[1] === 'optionBtn') return;
+      if (target.id !== 'board') {
         setSelected({ row: -1, column: -1 });
       }
     };
-
-    const handleArrowKeyPressWrapper = (event: KeyboardEvent) => {
-      handleArrowKeyPress(event);
+    const handleArrowKeyPressWrapper: EventListener = (event: Event) => {
+      const keyboardEvent = event as unknown as KeyboardEvent;
+      handleArrowKeyPress(keyboardEvent);
     };
 
     document.addEventListener('mousedown', handleClickOutside);
@@ -221,8 +224,23 @@ const Sudoku: React.FC<SudokuProps> = ({ board: initialBoard, onCellChange, decr
   }, [board, selected, theme]);
 
   return (
-    <div className={`p-4 mx-auto flex flex-col border justify-center gap-5`}>
-      <div id="board" className={`flex flex-col justify-center items-center mb-8 p-4 rounded-2xl shadow-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}>
+    <div className={`mx-auto flex flex-col justify-center gap-2 sm:gap-5`}>
+
+      <RoomId 
+        roomId={roomId}
+        shareUrl='http://localhost:5173/play/'
+      />
+
+        <div className='block sm:hidden'>
+          <BoardDetails 
+            totalLives={totalLives}
+            remainingLives={1}
+            board={board}
+            phone={true}
+          />
+        </div>
+
+      <div id="board" className={`flex flex-col justify-center items-center mb-3 sm:mb-8 p-4 rounded-2xl shadow-sm ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}>
         {board.grid.map((row, rowIndex) => (
           <div key={rowIndex} className="flex">
             {row.map((cell, colIndex) => (
@@ -240,12 +258,15 @@ const Sudoku: React.FC<SudokuProps> = ({ board: initialBoard, onCellChange, decr
         ))}
       </div>
 
-      <div>
-        <BoardDetails 
-          totalLives={totalLives}
-          remainingLives={1}
-          board={board}
-        />
+      <div className='border'>
+        <div className='hidden sm:block'>
+          <BoardDetails 
+            totalLives={totalLives}
+            remainingLives={1}
+            board={board}
+            phone={false}
+          />
+        </div>
         <OptionGrid options={options} handleOptionsClick={handleOptionsClick} />
       </div>
 

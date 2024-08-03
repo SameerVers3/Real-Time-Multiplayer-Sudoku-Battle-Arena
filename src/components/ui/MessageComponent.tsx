@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import EmojiPicker from 'emoji-picker-react';
+import EmojiPicker, { Theme } from 'emoji-picker-react';
 import IncomingMessage from './IncomingMessage';
 import OutgoingMessage from './OutgoingMessage';
 import Notification from './Notification';
@@ -30,7 +30,7 @@ export const MessageComponent: React.FC<MessageProps> = ({ messages, joinedBy, o
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
-  const { theme } = useTheme();
+  const { theme } = useTheme() ?? {};
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -165,7 +165,7 @@ export const MessageComponent: React.FC<MessageProps> = ({ messages, joinedBy, o
             >
               <EmojiPicker
                 onEmojiClick={handleEmojiClick}
-                theme={theme === 'dark' ? 'dark' : 'light'}
+                theme={theme as Theme}
                 width={300}
                 height={400}
               />

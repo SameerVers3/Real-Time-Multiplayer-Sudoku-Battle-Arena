@@ -55,7 +55,7 @@ const Nav = () => {
               <div className="dropdown dropdown-hover dropdown-end">
                 <div className="avatar h-12 w-12">
                   <div className="w-24 rounded-full">
-                    <img src={state.currentUser.photoURL} alt="User Avatar" />
+                    <img src={state.currentUser.photoURL ?? ""} alt="User Avatar" />
                   </div>
                 </div>
 

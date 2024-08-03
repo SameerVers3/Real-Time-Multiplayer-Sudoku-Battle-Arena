@@ -317,14 +317,16 @@ const Play: React.FC = () => {
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen">
-      <div className="w-full md:w-3/4 p-4">
-        <div className="flex flex-col rounded-lg shadow-lg p-4">
+      <div className="w-full md:w-3/4 sm:p-4">
+        <div className="flex flex-col rounded-lg p-2 sm:p-4">
           <Sudoku 
             board={board} 
             onCellChange={handleCellChange} 
             decreaseLive={handleDecreaseLives}
             totalLives={TOTAL_LIVES}
             remainingLives={lives}
+            roomId={id}
+
           />
           {id && <OthersProgress roomId={id} />}
         </div>

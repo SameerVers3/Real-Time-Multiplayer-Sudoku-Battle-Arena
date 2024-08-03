@@ -6,15 +6,16 @@ interface BoardDetailsProps {
   totalLives: number;
   remainingLives: number;
   board: Board;
+  phone: boolean;
 }
 
 type Board = {
   grid: number[][];
   solution: number[][];
-  actual: number[][];
+  actual?: number[][];
 };
 
-const BoardDetails: React.FC<BoardDetailsProps> = ({ totalLives, remainingLives, board }) => {
+const BoardDetails: React.FC<BoardDetailsProps> = ({ totalLives, remainingLives, board, phone }) => {
   const { theme } = useTheme();
   const [progress, setProgress] = useState<number>(0);
 
@@ -26,7 +27,7 @@ const BoardDetails: React.FC<BoardDetailsProps> = ({ totalLives, remainingLives,
     board.grid.forEach((row, rowIndex) => {
       row.forEach((cell, colIndex) => {
         if (cell !== 0) {
-          if (cell === board.solution[rowIndex][colIndex] && cell !== board.actual[rowIndex][colIndex]) {
+          if (cell === board.solution[rowIndex][colIndex] && board.actual && cell !== board.actual[rowIndex][colIndex]) {
             correctCells++;
           } else {
             actualCount++;
@@ -47,10 +48,10 @@ const BoardDetails: React.FC<BoardDetailsProps> = ({ totalLives, remainingLives,
   }, [board]);
 
   return (
-    <div className={`p-3 m-2 rounded-lg shadow-md ${theme === 'dark' ? 'bg-gray-800 text-gray-100' : 'bg-gray-100 text-gray-900'}`}>
+    <div className={`px-3 p-1 sm:p-3 m-2 rounded-lg  ${phone ? '' : `${theme === 'dark' ? 'text-gray-100 bg-gray-800 bg-gray-800' : 'text-gray-900 bg-gray-100'}`}`}>
 
       <div className='flex justify-center items-center gap-5'>
-        <div className='flex border'>
+        <div className='flex'>
           <div className="font-bold text-lg">
             <span className={`text-3xl ${remainingLives == 0 && "text-red-500"}`}>{remainingLives}</span>
               / {totalLives}

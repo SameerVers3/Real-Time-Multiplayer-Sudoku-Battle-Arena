@@ -24,7 +24,7 @@ interface Room {
 
 const OthersProgress: React.FC<{ roomId: string | undefined }> = ({ roomId }) => {
   const [membersProgress, setMembersProgress] = useState<{ [key: string]: RoomMember }>({});
-  const [roomSolution, setRoomSolution] = useState<number[][] | null>(null);
+  const [roomSolution, setRoomSolution] = useState<number[][]>([] ?? null);
   const [actualBoard, setActualBoard] = useState<number[][] | null>(null);
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState<string | null>(null);
@@ -85,9 +85,9 @@ const OthersProgress: React.FC<{ roomId: string | undefined }> = ({ roomId }) =>
         <p>Loading progress...</p>
       ) : (
         <div className='overflow-x-auto'>
-          <div className='flex flex-nowrap gap-8'>
+          <div className='flex flex-nowrap sm:gap-6'>
             {roomSolution && Object.entries(membersProgress).map(([memberId, member]) => (
-              <div key={memberId} className="flex-none border border-red-800 px-2 py-1 rounded-xl">
+              <div key={memberId} className="flex-none px-2 py-1 rounded-xl">
                 <ProgressBoard board={{ grid: member.gameBoard, solution: roomSolution, actual: actualBoard, name: member.memberName, lives: member.remainingLives, totalLives: member.totalLives, photoURL: member.photoURL }} />
               </div>
             ))}

@@ -5,11 +5,11 @@ interface ProgressBoardProps {
   board: {
     grid: number[][];
     solution: number[][];
-    actual: number[][];
-    name: string;
+    actual: number[][] | null;
+    name: string | null;
     lives: number;
     totalLives: number;
-    photoURL: string;
+    photoURL: string | null;
   };
 }
 
@@ -18,7 +18,7 @@ const ProgressBoard: React.FC<ProgressBoardProps> = ({ board }) => {
   const { theme } = useTheme();
 
   const isFilled = (row: number, col: number): string => {
-    if (board.grid[row][col] === board.actual[row][col] && board.grid[row][col] !== 0) {
+    if (board.actual && board.grid[row][col] === board.actual[row][col] && board.grid[row][col] !== 0) {
       return theme === 'light' ? 'bg-blue-300' : 'bg-blue-900';
     }
     if (board.grid[row][col] === board.solution[row][col]) {
@@ -52,7 +52,7 @@ const ProgressBoard: React.FC<ProgressBoardProps> = ({ board }) => {
     board.grid.forEach((row, rowIndex) => {
       row.forEach((cell, colIndex) => {
         if (cell !== 0) {
-          if (cell === board.solution[rowIndex][colIndex] && cell !== board.actual[rowIndex][colIndex]) {
+          if (cell === board.solution[rowIndex][colIndex] && board.actual && cell !== board.actual[rowIndex][colIndex]) {
             correctCells++;
           }
           else {
@@ -89,7 +89,7 @@ const ProgressBoard: React.FC<ProgressBoardProps> = ({ board }) => {
   };
 
   return (
-    <div className={`relative p-1 sm:p-2 max-w-[400px] mx-auto rounded-xl shadow-lg ${theme === 'dark' ? 'bg-gray-900 text-gray-100' : 'bg-gray-50 text-gray-900'}`}>
+    <div className={`relative p-3 sm:p-2 max-w-[400px] mx-auto rounded-xl shadow-lg ${theme === 'dark' ? 'bg-gray-900 text-gray-100' : 'bg-gray-50 text-gray-900'}`}>
       <div className="relative">
         <div className={`grid grid-rows-3 grid-cols-3 gap-1 p-2 rounded-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-200'}`}>
           {[0, 3, 6].map(row => 
@@ -131,7 +131,7 @@ const ProgressBoard: React.FC<ProgressBoardProps> = ({ board }) => {
         <div className="flex justify-between align-center w-full">
           <div className="avatar">
             <div className="w-8 h-8 rounded-full">
-              <img src={board.photoURL} alt="Avatar" />
+              <img src={board.photoURL ?? undefined} alt="Avatar" />
             </div>
           </div>
           <div className="font-bold text-lg">
@@ -139,7 +139,7 @@ const ProgressBoard: React.FC<ProgressBoardProps> = ({ board }) => {
               / {board.totalLives}
           </div>
         </div>
-        <h2 className="text-xl font-bold max-w-1 text-gray-500">{trimString(board.name) || 'Unknown Member'}</h2>
+        <h2 className="text-xl font-bold max-w-1 text-gray-500">{trimString(board.name ?? '') || 'Unknown Member'}</h2>
       </div>
     </div>
   );
