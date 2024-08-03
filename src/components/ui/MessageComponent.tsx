@@ -1,7 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
+import EmojiPicker from 'emoji-picker-react';
 import IncomingMessage from './IncomingMessage';
 import OutgoingMessage from './OutgoingMessage';
 import Notification from './Notification';
+import { useTheme } from '../contexts/UserContext';
 
 interface Message {
   message: string;
@@ -25,13 +27,26 @@ interface MessageProps {
 
 export const MessageComponent: React.FC<MessageProps> = ({ messages, joinedBy, onSendMessage, userId }) => {
   const [newMessage, setNewMessage] = useState('');
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const emojiPickerRef = useRef<HTMLDivElement>(null);
+  const { theme } = useTheme();
 
-  const scrollToBottom = () => {
+  // Scroll to bottom when messages change
+  useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+  }, [messages]);
 
-  useEffect(scrollToBottom, [messages]); 
+  // Close the emoji picker when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target as Node)) {
+        setShowEmojiPicker(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleSendMessage = () => {
     if (newMessage.trim()) {
@@ -40,60 +55,90 @@ export const MessageComponent: React.FC<MessageProps> = ({ messages, joinedBy, o
     }
   };
 
+  const handleEmojiClick = (emojiData: any) => {
+    setNewMessage((prev) => prev + emojiData.emoji);
+  };
+
   return (
-    <div className="flex flex-col max-h-[80vh] bg-gray-100 rounded-lg shadow-md">
-      <div className="p-4 bg-blue-600 text-white font-bold rounded-t-lg">
+    <div className={`flex flex-col max-h-[80vh] rounded-lg shadow-md ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'}`}>
+      <div className={`p-4 ${theme === 'dark' ? 'bg-blue-800' : 'bg-blue-600'} text-white font-bold rounded-t-lg`}>
         Chat Room
       </div>
       <div className="flex-grow overflow-y-auto p-4 space-y-4">
-          {messages.map((msg, index) => {
-              const sender = joinedBy.find(user => user.userID === msg.senderID);
-              switch (msg.messageType) {
-                case "notification":
-                  return (
-                    <Notification
-                      key={index}
-                      message={msg.message}
-                      time={msg.time}
-                    />
-                  );
-                case "message":
-                  return userId === msg.senderID ? (
-                    <OutgoingMessage
-                      key={index}
-                      message={msg.message}
-                      time={msg.time}
-                      sender={sender?.userName}
-                      photoURL={sender?.photoURL}
-                    />
-                  ) : (
-                    <IncomingMessage
-                      key={index}
-                      message={msg.message}
-                      time={msg.time}
-                      sender={sender?.userName}
-                      photoURL={sender?.photoURL}
-                    />
-                  );
-                default:
-                  return null;
-              }
-            })}
+        {messages.map((msg, index) => {
+          const sender = joinedBy.find(user => user.userID === msg.senderID);
+          switch (msg.messageType) {
+            case "notification":
+              return (
+                <Notification
+                  key={index}
+                  message={msg.message}
+                  time={msg.time}
+                />
+              );
+            case "message":
+              return userId === msg.senderID ? (
+                <OutgoingMessage
+                  key={index}
+                  message={msg.message}
+                  time={msg.time}
+                  sender={sender?.userName}
+                  photoURL={sender?.photoURL}
+                />
+              ) : (
+                <IncomingMessage
+                  key={index}
+                  message={msg.message}
+                  time={msg.time}
+                  sender={sender?.userName}
+                  photoURL={sender?.photoURL}
+                />
+              );
+            default:
+              return null;
+          }
+        })}
         <div ref={messagesEndRef} />
       </div>
-      <div className="p-4 bg-white border-t">
-        <div className="flex space-x-2">
+      <div className={`p-4 ${theme === 'dark' ? 'bg-gray-700' : 'bg-white'} border-t ${theme === 'dark' ? 'border-gray-600' : 'border-gray-200'}`}>
+        <div className="relative flex space-x-2">
+          <button
+            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+            className={`px-4 py-2 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              theme === 'dark' ? 'bg-blue-700 hover:bg-blue-800' : 'bg-blue-600 hover:bg-blue-700'
+            }`}
+          >
+            😊
+          </button>
           <input
             type="text"
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
             placeholder="Type a message..."
-            className="flex-grow px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className={`flex-grow px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              theme === 'dark' ? 'bg-gray-800 text-white border-gray-600' : 'bg-white text-gray-800 border-gray-300'
+            }`}
           />
+          {showEmojiPicker && (
+            <div
+              ref={emojiPickerRef}
+              className={`absolute z-10 ${theme === 'dark' ? 'bg-gray-900' : 'bg-white'} rounded-lg shadow-lg`}
+              style={{ bottom: '60px', right: '20px' }}
+            >
+              <EmojiPicker
+                onEmojiClick={handleEmojiClick}
+                theme={theme === 'dark' ? 'dark' : 'light'}
+                width={300}
+                height={400}
+              />
+            </div>
+          )}
           <button
             onClick={handleSendMessage}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className={`px-4 py-2 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              theme === 'dark' ? 'bg-blue-700 hover:bg-blue-800' : 'bg-blue-600 hover:bg-blue-700'
+            }`}
           >
             Send
           </button>
@@ -102,3 +147,5 @@ export const MessageComponent: React.FC<MessageProps> = ({ messages, joinedBy, o
     </div>
   );
 };
+
+export default MessageComponent;

@@ -34,8 +34,8 @@ const Nav = () => {
   }, [theme]);
 
   return (
-    <nav className="border p-2 px-12 flex items-center justify-between">
-      <div className="flex justify-between items-center border w-full">
+    <nav className="p-1 px-12 flex items-center justify-between">
+      <div className="flex justify-between items-center w-full">
         <a className="text-2xl" href="/">
           Sudoku
         </a>
