@@ -1,0 +1,34 @@
+import React from 'react';
+import { useTheme } from '../contexts/UserContext'; // Adjust the import path as necessary
+
+interface OptionGridProps {
+  options: number[];
+  handleOptionsClick: (event: React.MouseEvent<HTMLDivElement>) => void;
+}
+
+const OptionGrid: React.FC<OptionGridProps> = ({ options, handleOptionsClick }) => {
+  const { theme } = useTheme(); // Assumes useTheme returns { theme: "light" | "dark" }
+
+  return (
+    <div className={`p-1 rounded-lg shadow-md ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}>
+      <div className="grid grid-cols-3 gap-2">
+        {options.map((number) => (
+          <div
+            key={number}
+            className={`flex justify-center items-center h-14 w-14 rounded-lg cursor-pointer transition-transform duration-200 transform hover:scale-105 active:scale-95
+              ${theme === 'dark'
+                ? 'bg-gray-700 text-gray-100 shadow-md hover:shadow-lg active:shadow-inner'
+                : 'bg-gray-100 text-gray-900 shadow-sm hover:shadow-lg active:shadow-inner'
+              }`}
+            id={`${number}-optionBtn`}
+            onClick={handleOptionsClick}
+          >
+            {number}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+export default OptionGrid;

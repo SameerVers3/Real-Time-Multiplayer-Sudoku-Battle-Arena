@@ -208,16 +208,18 @@ const Play: React.FC = () => {
   if (!board) return <p>No board found.</p>;
 
   return (
-    <div className="flex">
+    <div className="flex bg-gray-900">
       <div className="w-[70%]">
-        <Sudoku 
-          board={board} 
-          onCellChange={handleCellChange} 
-          decreaseLive={handleDecreaseLives}
-        />
-        <p>Lives remaining: {lives}</p>
-        <button onClick={handleDecreaseLives}>Decrease Lives</button>
-        {id && <OthersProgress roomId={id} />}
+        <div>
+          <Sudoku 
+            board={board} 
+            onCellChange={handleCellChange} 
+            decreaseLive={handleDecreaseLives}
+            totalLives={TOTAL_LIVES}
+            remainingLives={lives} // Pass the remainingLives to Sudoku
+          />
+          {id && <OthersProgress roomId={id} />}
+        </div>
       </div>
 
       <div className="border ">

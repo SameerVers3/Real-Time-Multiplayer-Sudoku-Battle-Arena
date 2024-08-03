@@ -39,7 +39,7 @@ const JoinRoomModal: React.FC = () => {
       if (res.success) {
         alert(res.message);
         navigate(`/play/${roomID}`);
-        setLoading(false);
+        setLoading(false)
       } else {
         alert(res.message);
       }

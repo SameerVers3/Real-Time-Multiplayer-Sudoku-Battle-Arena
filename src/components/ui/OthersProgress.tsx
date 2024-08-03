@@ -79,17 +79,15 @@ const OthersProgress: React.FC<{ roomId: string | undefined }> = ({ roomId }) =>
   }, [fetchRoomData]);
 
   return (
-    <div className='border mb-12'>
+    <div className='mb-12 mx-16 flex justify-center'>
       {authError && <p>{authError}</p>}
       {loading ? (
         <p>Loading progress...</p>
       ) :
       <div className='flex gap-8'>
         {roomSolution && Object.entries(membersProgress).map(([memberId, member]) => (
-          <div key={memberId} className="border border-red-200 px-5 py-2 rounded-xl">
-            <ProgressBoard board={{ grid: member.gameBoard, solution: roomSolution, actual: actualBoard }} />
-            
-            <h2 className="text-xl font-bold">{member.memberName || 'Unknown Member'}</h2>
+          <div key={memberId} className="border border-gray-800 px-3 py-1 rounded-xl">
+            <ProgressBoard board={{ grid: member.gameBoard, solution: roomSolution, actual: actualBoard, name: member.memberName, lives: member.remainingLives, totalLives: member.totalLives, photoURL: member.photoURL }} />
           </div>
         ))}
       </div> 
