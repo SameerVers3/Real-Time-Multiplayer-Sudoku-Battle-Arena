@@ -79,19 +79,21 @@ const OthersProgress: React.FC<{ roomId: string | undefined }> = ({ roomId }) =>
   }, [fetchRoomData]);
 
   return (
-    <div className='mb-12 mx-16 flex justify-center'>
+    <div className='mb-12 sm:mx-8 flex justify-center'>
       {authError && <p>{authError}</p>}
       {loading ? (
         <p>Loading progress...</p>
-      ) :
-      <div className='flex gap-8'>
-        {roomSolution && Object.entries(membersProgress).map(([memberId, member]) => (
-          <div key={memberId} className="border border-gray-800 px-3 py-1 rounded-xl">
-            <ProgressBoard board={{ grid: member.gameBoard, solution: roomSolution, actual: actualBoard, name: member.memberName, lives: member.remainingLives, totalLives: member.totalLives, photoURL: member.photoURL }} />
+      ) : (
+        <div className='overflow-x-auto'>
+          <div className='flex flex-nowrap gap-8'>
+            {roomSolution && Object.entries(membersProgress).map(([memberId, member]) => (
+              <div key={memberId} className="flex-none border border-red-800 px-2 py-1 rounded-xl">
+                <ProgressBoard board={{ grid: member.gameBoard, solution: roomSolution, actual: actualBoard, name: member.memberName, lives: member.remainingLives, totalLives: member.totalLives, photoURL: member.photoURL }} />
+              </div>
+            ))}
           </div>
-        ))}
-      </div> 
-      }
+        </div>
+      )}
     </div>
   );
 };

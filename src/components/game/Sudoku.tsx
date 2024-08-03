@@ -42,7 +42,7 @@ const Sudoku: React.FC<SudokuProps> = ({ board: initialBoard, onCellChange, decr
   };
 
   const getCellStyle = (row: number, col: number): string => {
-    let baseStyle = "w-9 h-9 flex justify-center items-center text-lg m-[1px] rounded-lg shadow-sm transition-all duration-100 ";
+    let baseStyle = "w-8 h-8 flex justify-center items-center text-lg m-[1px] rounded-lg shadow-sm transition-all duration-100 ";
     
     if (theme === 'light') {
       if (board.grid[row][col] === board.solution[row][col] && board.actual[row][col] === 0) {
@@ -221,7 +221,7 @@ const Sudoku: React.FC<SudokuProps> = ({ board: initialBoard, onCellChange, decr
   }, [board, selected, theme]);
 
   return (
-    <div className={`p-4 mx-auto flex flex-row border justify-center gap-3`}>
+    <div className={`p-4 mx-auto flex flex-col border justify-center gap-5`}>
       <div id="board" className={`flex flex-col justify-center items-center mb-8 p-4 rounded-2xl shadow-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}>
         {board.grid.map((row, rowIndex) => (
           <div key={rowIndex} className="flex">

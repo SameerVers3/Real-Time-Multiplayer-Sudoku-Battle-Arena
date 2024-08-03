@@ -10,8 +10,8 @@ const OptionGrid: React.FC<OptionGridProps> = ({ options, handleOptionsClick }) 
   const { theme } = useTheme(); // Assumes useTheme returns { theme: "light" | "dark" }
 
   return (
-    <div className={`p-1 rounded-lg shadow-md ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}>
-      <div className="grid grid-cols-3 gap-2">
+    <div className={`p-3 border rounded-lg shadow-md ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}>
+      <div className={`flex flex-wrap justify-center sm:grid gap-1 sm:gap-2 grid-cols-1 sm:grid-cols-3`}>
         {options.map((number) => (
           <div
             key={number}

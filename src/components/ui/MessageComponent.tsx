@@ -59,6 +59,43 @@ export const MessageComponent: React.FC<MessageProps> = ({ messages, joinedBy, o
     setNewMessage((prev) => prev + emojiData.emoji);
   };
 
+  function breakIntoLines(input: string, maxLength: number = 35): string {
+    const lines: string[] = [];
+    let currentLine = '';
+
+    // Split input into words
+    const words = input.split(' ');
+
+    words.forEach(word => {
+        // If the current word is longer than maxLength, break it into chunks
+        while (word.length > maxLength) {
+            // Add a chunk of the word to the currentLine
+            lines.push(word.slice(0, maxLength));
+            word = word.slice(maxLength);
+        }
+
+        // If adding the word to the current line would exceed maxLength
+        if (currentLine.length + word.length + (currentLine.length ? 1 : 0) > maxLength) {
+            // Push the current line to the lines array
+            lines.push(currentLine);
+            // Start a new line with the current word
+            currentLine = word;
+        } else {
+            // Otherwise, add the word to the current line
+            currentLine += (currentLine ? ' ' : '') + word;
+        }
+    });
+
+    // Add any remaining text in currentLine to the lines array
+    if (currentLine) {
+        lines.push(currentLine);
+    }
+
+    return lines.join('\n');
+}
+
+
+
   return (
     <div className={`flex flex-col max-h-[80vh] rounded-lg shadow-md ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'}`}>
       <div className={`p-4 ${theme === 'dark' ? 'bg-blue-800' : 'bg-blue-600'} text-white font-bold rounded-t-lg`}>
@@ -80,7 +117,7 @@ export const MessageComponent: React.FC<MessageProps> = ({ messages, joinedBy, o
               return userId === msg.senderID ? (
                 <OutgoingMessage
                   key={index}
-                  message={msg.message}
+                  message={breakIntoLines(msg.message)}
                   time={msg.time}
                   sender={sender?.userName}
                   photoURL={sender?.photoURL}
@@ -88,7 +125,7 @@ export const MessageComponent: React.FC<MessageProps> = ({ messages, joinedBy, o
               ) : (
                 <IncomingMessage
                   key={index}
-                  message={msg.message}
+                  message={breakIntoLines(msg.message)}
                   time={msg.time}
                   sender={sender?.userName}
                   photoURL={sender?.photoURL}

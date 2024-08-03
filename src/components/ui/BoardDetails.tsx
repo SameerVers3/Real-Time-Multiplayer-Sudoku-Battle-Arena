@@ -47,7 +47,7 @@ const BoardDetails: React.FC<BoardDetailsProps> = ({ totalLives, remainingLives,
   }, [board]);
 
   return (
-    <div className={`p-6 rounded-lg shadow-md ${theme === 'dark' ? 'bg-gray-800 text-gray-100' : 'bg-gray-100 text-gray-900'}`}>
+    <div className={`p-3 m-2 rounded-lg shadow-md ${theme === 'dark' ? 'bg-gray-800 text-gray-100' : 'bg-gray-100 text-gray-900'}`}>
 
       <div className='flex justify-center items-center gap-5'>
         <div className='flex border'>
@@ -67,7 +67,7 @@ const BoardDetails: React.FC<BoardDetailsProps> = ({ totalLives, remainingLives,
         </div>
       </div>
 
-      <div className="flex justify-between items-center mt-4">
+      <div className="flex justify-between items-center mt-2">
         <div className="w-full max-w-md">
           <progress
             className={`progress w-full h-2 ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-300'}`}

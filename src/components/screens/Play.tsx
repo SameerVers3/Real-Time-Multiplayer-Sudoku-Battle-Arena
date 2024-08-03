@@ -316,9 +316,9 @@ const Play: React.FC = () => {
   );
 
   return (
-    <div className="flex flex-col md:flex-row bg-gray-900 min-h-screen">
+    <div className="flex flex-col md:flex-row min-h-screen">
       <div className="w-full md:w-3/4 p-4">
-        <div className="bg-gray-800 rounded-lg shadow-lg p-4">
+        <div className="flex flex-col rounded-lg shadow-lg p-4">
           <Sudoku 
             board={board} 
             onCellChange={handleCellChange} 
@@ -331,7 +331,7 @@ const Play: React.FC = () => {
       </div>
 
       <div className="w-full md:w-1/4 p-4">
-        <div className="bg-gray-800 rounded-lg shadow-lg h-full">
+        <div className=" rounded-lg shadow-lg h-full">
           <MessageComponent
             messages={messages}
             joinedBy={joinedBy}

@@ -30,7 +30,7 @@ const ProgressBoard: React.FC<ProgressBoardProps> = ({ board }) => {
   const renderCell = (rowIndex: number, cellIndex: number) => (
     <div
       key={`${rowIndex}-${cellIndex}`}
-      className={`w-4 h-4 flex justify-center items-center text-xs font-medium ${isFilled(rowIndex, cellIndex)} rounded-md`}
+      className={`w-3 h-3 sm:w-4 sm:h-4 flex justify-center items-center text-xs font-medium ${isFilled(rowIndex, cellIndex)} rounded-md`}
     >
       {/* {board.grid[rowIndex][cellIndex] !== 0 && board.grid[rowIndex][cellIndex]} */}
     </div>
@@ -75,27 +75,21 @@ const ProgressBoard: React.FC<ProgressBoardProps> = ({ board }) => {
   }, [board]);
 
   const trimString = (str: string) => {
-    if (str.length > 15) {
-      return `${str.slice(0, 13)}...`;
+    const word = str.split(" ")[0];
+    console.log(word);
+    if (word) {
+      if (word.length > 15) {
+        return `${word.slice(0, 13)}...`;
+      }
+      return word;
     }
-    return str;
+    else {
+      return str
+    }
   };
 
   return (
-    <div className={`relative p-2 max-w-[400px] mx-auto rounded-xl shadow-lg ${theme === 'dark' ? 'bg-gray-900 text-gray-100' : 'bg-gray-50 text-gray-900'}`}>
-      {board.lives === 0 && (
-        <div className="absolute inset-0 flex justify-center items-center">
-          <svg
-            className="w-24 h-24 text-red-500"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </div>
-      )}
+    <div className={`relative p-1 sm:p-2 max-w-[400px] mx-auto rounded-xl shadow-lg ${theme === 'dark' ? 'bg-gray-900 text-gray-100' : 'bg-gray-50 text-gray-900'}`}>
       <div className="relative">
         <div className={`grid grid-rows-3 grid-cols-3 gap-1 p-2 rounded-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-200'}`}>
           {[0, 3, 6].map(row => 
@@ -106,7 +100,7 @@ const ProgressBoard: React.FC<ProgressBoardProps> = ({ board }) => {
             ))
           )}
         </div>
-        {board.lives === 0 && (
+        {/* {board.lives === 0 && (
           <div className="absolute inset-0 flex justify-center items-center pointer-events-none">
             <svg
               className="w-56 h-56 text-red-500"
@@ -118,9 +112,9 @@ const ProgressBoard: React.FC<ProgressBoardProps> = ({ board }) => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </div>
-        )}
+        )} */}
       </div>
-      <div className="flex justify-center items-center w-full mt-4">
+      <div className="flex justify-center items-center w-full mt-1">
         <div className="flex items-center w-full max-w-md">
           <progress
             className={`progress w-full h-2 mr-2 ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-300'}`}
