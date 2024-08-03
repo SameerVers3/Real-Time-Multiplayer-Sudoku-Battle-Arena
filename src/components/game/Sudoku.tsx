@@ -243,7 +243,7 @@ const Sudoku: React.FC<SudokuProps> = ({ board: initialBoard, onCellChange, decr
       <div>
         <BoardDetails 
           totalLives={totalLives}
-          remainingLives={remainingLives}
+          remainingLives={1}
           board={board}
         />
         <OptionGrid options={options} handleOptionsClick={handleOptionsClick} />

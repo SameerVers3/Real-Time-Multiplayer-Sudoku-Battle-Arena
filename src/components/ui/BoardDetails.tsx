@@ -48,22 +48,35 @@ const BoardDetails: React.FC<BoardDetailsProps> = ({ totalLives, remainingLives,
 
   return (
     <div className={`p-6 rounded-lg shadow-md ${theme === 'dark' ? 'bg-gray-800 text-gray-100' : 'bg-gray-100 text-gray-900'}`}>
-      <div className="mb-4">
-        <strong className="text-lg">Total Lives:</strong> {totalLives}
+
+      <div className='flex justify-center items-center gap-5'>
+        <div className='flex border'>
+          <div className="font-bold text-lg">
+            <span className={`text-3xl ${remainingLives == 0 && "text-red-500"}`}>{remainingLives}</span>
+              / {totalLives}
+          </div>
+        </div>
+
+        <div className="flex items-center mt-2 gap-1">
+          {[...Array(totalLives)].map((_, index) => (
+            <FaHeart
+              key={index}
+              className={`text-2xl ${index < remainingLives ? 'text-red-500' : theme == "dark" ? "text-gray-700" : 'text-gray-300'}`}
+              />
+            ))}
+        </div>
       </div>
-      <div className="mb-4">
-        <strong className="text-lg">Remaining Lives:</strong> {remainingLives}
-      </div>
-      <div className="flex justify-center items-center w-full mt-4">
-        <div className="flex items-center w-full max-w-md">
+
+      <div className="flex justify-between items-center mt-4">
+        <div className="w-full max-w-md">
           <progress
-            className={`progress w-full h-2 mr-2 ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-300'}`}
+            className={`progress w-full h-2 ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-300'}`}
             value={progress}
             max="100"
           />
-          <div className={`font-semibold ${theme === 'dark' ? 'text-gray-200' : 'text-gray-800'}`}>
-            {progress}%
-          </div>
+        </div>
+        <div className={`ml-2 font-semibold ${theme === 'dark' ? 'text-gray-200' : 'text-gray-800'}`}>
+          {progress}%
         </div>
       </div>
     </div>
