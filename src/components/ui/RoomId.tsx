@@ -3,11 +3,11 @@ import { useTheme } from '../contexts/UserContext';
 import { Copy, Share2, Check } from 'lucide-react';
 
 interface RoomIdProps {
-  roomId: string;
+  roomId: string | undefined;
   shareUrl: string;
 }
 
-const RoomId: React.FC<RoomIdProps> = ({ roomId, shareUrl }) => {
+const RoomId: React.FC<RoomIdProps> = ({ roomId = '', shareUrl }) => {
   const { theme } = useTheme();
   const [copied, setCopied] = useState(false);
 
@@ -26,7 +26,7 @@ const RoomId: React.FC<RoomIdProps> = ({ roomId, shareUrl }) => {
     if (navigator.share) {
       navigator.share({
         title: 'Soduku Room ID',
-        text: `Wanna Play Sudoku with me? check out this room ID : ${roomId}`,
+        text: `Wanna Play Sudoku with me? check out this sudoku room: `,
         url: `${shareUrl + roomId}`
       })
       .then(() => console.log('Share successful'))
@@ -43,27 +43,27 @@ const RoomId: React.FC<RoomIdProps> = ({ roomId, shareUrl }) => {
   const iconColor = theme === 'dark' ? 'text-gray-400' : 'text-gray-600';
 
   return (
-    <div className={`mx-auto flex items-center gap-2 ${bgColor} rounded-md p-2 w-fit gap-5`}>
-      <div>
+    <div className={`mx-auto flex items-center ${bgColor} rounded-md p-2 gap-2 sm:p-4 sm:gap-4`}>
+      <div className={`text-base sm:text-lg ${textColor}`}>
         Room Id: 
       </div>
-      <div className='flex justify-center items-center gap-3'>
+      <div className='flex justify-center items-center gap-1 sm:gap-2'>
         <div 
-          className={`flex items-center gap-2 cursor-pointer ${textColor} text-xl font-medium`}
+          className={`flex items-center gap-2 cursor-pointer ${textColor} text-xl sm:text-2xl font-medium`}
           onClick={handleCopy}
         >
-          <span>{roomId}</span>
+          <span className={`text-sm sm:text-xl sm:font-bold`}>{roomId}</span>
           {copied ? (
-            <Check size={16} className={iconColor} />
+            <Check size={20} className={iconColor} />
           ) : (
-            <Copy size={16} className={iconColor} />
+            <Copy size={20} className={iconColor} />
           )}
         </div>
         <button
-          className={`p-1 rounded transition-colors ${bgColor} hover:bg-opacity-80`}
+          className={`p-1 rounded transition-colors ${bgColor} hover:bg-opacity-80 sm:p-2`}
           onClick={handleShare}
         >
-          <Share2 size={16} className={iconColor} />
+          <Share2 size={20} className={iconColor} />
         </button>
       </div>
     </div>

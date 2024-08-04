@@ -8,7 +8,8 @@ export const validateAndUpdateRoom = async (
   roomId: string,
   userId: string,
   userName: string | null,
-  photoURL: string | null
+  photoURL: string | null,
+  setMaxMember?: (maxMember: number | undefined) => void
 ): Promise<{ success: boolean; message: string }> => {
   const firestore = useFirestore();
   const roomsCollection = collection(firestore, "Rooms");
@@ -23,8 +24,18 @@ export const validateAndUpdateRoom = async (
   const roomDoc = await getDoc(roomDocRef);
   const roomData = roomDoc.data();
 
+  if (!roomData?.isActive) {
+    return {
+      success: false,
+      message: "Room Expired"
+    }
+  }
+
   // Retrieve maxMember and joinedBy
   const maxMember = roomData?.maxMember;
+  if (setMaxMember) {
+    setMaxMember(maxMember);
+  }
   const joinedBy = roomData?.joinedBy || [];
   const currentMembersCount = joinedBy.length;
 

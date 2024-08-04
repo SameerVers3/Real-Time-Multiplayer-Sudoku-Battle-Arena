@@ -3,6 +3,7 @@ import { useTheme } from '../contexts/UserContext';
 import OptionGrid from '../ui/OptionGrid';
 import BoardDetails from '../ui/BoardDetails';
 import RoomId from '../ui/RoomId';
+import RoomDetails from '../ui/RoomDetails';
 
 type Board = {
   grid: number[][];
@@ -19,42 +20,44 @@ interface SudokuProps {
   board: Board;
   onCellChange: (row: number, col: number, value: number) => void;
   decreaseLive: () => void;
-  totalLives: number; // New prop
-  remainingLives: number; // New prop
-  roomId: string;
+  totalLives: number;
+  remainingLives: number;
+  roomId: string | undefined;
+  maxMembers: number;
+  joinedBy: { userID: string; userName: string | null; photoURL: string | null }[];
+  time: string;
+  onWin: () => void;
+  onGameEnd: () => void;
 }
 
 const options: number[] = [1, 2, 3, 4, 5, 6, 7, 8, 9];
 
-const Sudoku: React.FC<SudokuProps> = ({ board: initialBoard, onCellChange, decreaseLive, totalLives, remainingLives, roomId }) => {
+const Sudoku: React.FC<SudokuProps> = ({ board: initialBoard, onCellChange, decreaseLive, totalLives, remainingLives, roomId, maxMembers, joinedBy, time, onWin, onGameEnd }) => {
   const [board, setBoard] = useState<Board>(initialBoard);
   const [selected, setSelected] = useState<SelectedBox | undefined>();
   const [wrong, setWrong] = useState<SelectedBox | undefined>();
+  const [progress, setProgress] = useState<number>(0);
   const { theme } = useTheme();
 
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
     const id = (event.target as HTMLElement).id;
     const [row, col] = id.split("-").map(Number);
 
-    if (board.grid[row][col] !== 0) {
-      return;
+    if (board.grid[row][col] === 0) {
+      setSelected({ row, column: col });
     }
-
-    setSelected({ row, column: col });
   };
 
   const getCellStyle = (row: number, col: number): string => {
-    let baseStyle = "w-9 h-9 flex justify-center items-center text-lg m-[1px] rounded-lg shadow-sm transition-all duration-100 ";
-    
+    let baseStyle = "w-9 h-9 sm:h-14 sm:w-14 flex justify-center items-center text-lg m-[1px] rounded-lg shadow-sm transition-all duration-100 ";
+
     if (theme === 'light') {
       if (board.grid[row][col] === board.solution[row][col] && board.actual && board.actual[row][col] === 0) {
         baseStyle += "bg-emerald-100 text-emerald-700 ";
-      } else if ((row === wrong?.row && col === wrong.column) && (selected?.row === row && selected?.column === col)) {
-        baseStyle += "bg-sky-500 text-sky-200 ";
       } else if (row === wrong?.row && col === wrong.column) {
         baseStyle += "bg-rose-100 text-rose-700 ";
       } else if (selected?.row === row && selected?.column === col) {
-        baseStyle += "bg-sky-200 text-sky-700  ";
+        baseStyle += "bg-sky-200 text-sky-700 ";
       } else {
         baseStyle += "bg-zinc-100 hover:bg-gray-200 text-gray-700 ";
       }
@@ -63,10 +66,8 @@ const Sudoku: React.FC<SudokuProps> = ({ board: initialBoard, onCellChange, decr
         baseStyle += "bg-emerald-900 text-emerald-200 ";
       } else if (row === wrong?.row && col === wrong.column) {
         baseStyle += "bg-rose-900 text-rose-200 ";
-      } else if ((row === wrong?.row && col === wrong.column) && (selected?.row === row && selected?.column === col)) {
-        baseStyle += "bg-sky-900 text-sky-200 ";
       } else if (selected?.row === row && selected?.column === col) {
-        baseStyle += "bg-sky-900 text-sky-200 scale-105 ";
+        baseStyle += "bg-sky-900 text-sky-200 ";
       } else {
         baseStyle += "bg-slate-900 hover:bg-gray-700 text-gray-200 ";
       }
@@ -82,9 +83,9 @@ const Sudoku: React.FC<SudokuProps> = ({ board: initialBoard, onCellChange, decr
   };
 
   const getGridStyle = (row: number, col: number): CSSProperties => {
-    const borderColor = theme === 'light' ? '#d1d5db' : '#4b5563'; // gray-300 for light, red-400 for dark
+    const borderColor = theme === 'light' ? '#d1d5db' : '#4b5563';
     const style: CSSProperties = {};
-    
+
     if (col % 3 === 0) style.borderLeft = `2px solid ${borderColor}`;
     if (row % 3 === 0) style.borderTop = `2px solid ${borderColor}`;
     if (col === 8) style.borderRight = `2px solid ${borderColor}`;
@@ -104,22 +105,21 @@ const Sudoku: React.FC<SudokuProps> = ({ board: initialBoard, onCellChange, decr
       board.grid[i][j] = +id;
       setWrong(undefined);
       onCellChange(i, j, +id);
+      setBoard({ ...board });
+      updateProgress();
+      checkWin();
     } else {
       setWrong({ row: i, column: j });
       setSelected({ row: -1, column: -1 });
       decreaseLive();
-      return;
     }
-
-    setSelected({ row: -1, column: -1 });
-    setBoard({ ...board });
   };
 
   const handleArrowKeyPress = (event: KeyboardEvent) => {
     if (!selected) return;
-  
+
     let { row, column } = selected;
-  
+
     const moveInDirection = (row: number, column: number, direction: string): [number, number] => {
       while (true) {
         switch (direction) {
@@ -143,14 +143,13 @@ const Sudoku: React.FC<SudokuProps> = ({ board: initialBoard, onCellChange, decr
           return [row, column];
         }
 
-        // If we have reached the edge of the board, stop moving
         if (direction === 'up' && row === 0) return [row, column];
         if (direction === 'down' && row === 8) return [row, column];
         if (direction === 'left' && column === 0) return [row, column];
         if (direction === 'right' && column === 8) return [row, column];
       }
     };
-  
+
     switch (event.key) {
       case 'ArrowUp':
         [row, column] = moveInDirection(row, column, 'up');
@@ -182,23 +181,49 @@ const Sudoku: React.FC<SudokuProps> = ({ board: initialBoard, onCellChange, decr
               board.grid[i][j] = value;
               setWrong(undefined);
               onCellChange(i, j, value);
+              setBoard({ ...board });
+              updateProgress();
+              checkWin();
             } else {
               setWrong({ row: i, column: j });
               decreaseLive();
             }
-            setBoard({ ...board });
           }
         }
         return;
       default:
         return;
     }
-  
+
     if (board.grid[row][column] === 0) {
       setSelected({ row, column });
     }
   };
-  
+
+  const checkWin = () => {
+    if (progress == 100) {
+      onWin();
+    }
+  };
+
+  const updateProgress = () => {
+    let correctCells = 0;
+    let emptyCells = 0;
+
+    board.grid.forEach((row, rowIndex) => {
+      row.forEach((cell, colIndex) => {
+        if (cell === board.solution[rowIndex][colIndex]) {
+          correctCells++;
+        }
+        if (cell === 0) {
+          emptyCells++;
+        }
+      });
+    });
+
+    let progressPercentage = (correctCells / (81 - emptyCells)) * 100;
+    setProgress(Math.round(progressPercentage));
+  };
 
   useEffect(() => {
     const handleClickOutside: EventListener = (event: Event) => {
@@ -216,7 +241,7 @@ const Sudoku: React.FC<SudokuProps> = ({ board: initialBoard, onCellChange, decr
 
     document.addEventListener('mousedown', handleClickOutside);
     document.addEventListener('keydown', handleArrowKeyPressWrapper);
-    
+
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('keydown', handleArrowKeyPressWrapper);
@@ -224,22 +249,29 @@ const Sudoku: React.FC<SudokuProps> = ({ board: initialBoard, onCellChange, decr
   }, [board, selected, theme]);
 
   return (
-    <div className={`mx-auto flex flex-col justify-center gap-2 sm:gap-5`}>
-
-      <RoomId 
-        roomId={roomId}
-        shareUrl='http://localhost:5173/play/'
-      />
-
-        <div className='block sm:hidden'>
-          <BoardDetails 
-            totalLives={totalLives}
-            remainingLives={1}
-            board={board}
-            phone={true}
-          />
-        </div>
-
+    <div className={`mx-auto flex flex-col justify-center gap-6 sm:gap-5`}>
+      <div className="flex justify-center items-center">
+        <RoomId 
+          roomId={roomId}
+          shareUrl='http://localhost:5173/play/'
+        />
+        <RoomDetails
+          maxMembers={maxMembers}
+          joinedBy={joinedBy}
+          roomId={roomId}
+          onGameEnd={onGameEnd}
+        />
+      </div>
+      <div className='block lg:hidden'>
+        <BoardDetails 
+          totalLives={totalLives}
+          remainingLives={remainingLives}
+          board={board}
+          phone={true}
+          progress={progress}
+          setProgress={setProgress}
+        />
+      </div>
       <div id="board" className={`flex flex-col justify-center items-center mb-3 sm:mb-8 p-4 rounded-2xl shadow-sm ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}>
         {board.grid.map((row, rowIndex) => (
           <div key={rowIndex} className="flex">
@@ -257,20 +289,19 @@ const Sudoku: React.FC<SudokuProps> = ({ board: initialBoard, onCellChange, decr
           </div>
         ))}
       </div>
-
-      <div className='border'>
-        <div className='hidden sm:block'>
+      <div className=''>
+        <div className='hidden lg:block'>
           <BoardDetails 
             totalLives={totalLives}
-            remainingLives={1}
+            remainingLives={remainingLives}
             board={board}
             phone={false}
+            progress={progress}
+            setProgress={setProgress}
           />
         </div>
         <OptionGrid options={options} handleOptionsClick={handleOptionsClick} />
       </div>
-
-      {/* Render BoardDetails component */}
     </div>
   );
 };

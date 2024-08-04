@@ -7,6 +7,8 @@ interface BoardDetailsProps {
   remainingLives: number;
   board: Board;
   phone: boolean;
+  progress: number;
+  setProgress: (progress: number) => void;
 }
 
 type Board = {
@@ -15,9 +17,8 @@ type Board = {
   actual?: number[][];
 };
 
-const BoardDetails: React.FC<BoardDetailsProps> = ({ totalLives, remainingLives, board, phone }) => {
+const BoardDetails: React.FC<BoardDetailsProps> = ({ totalLives, remainingLives, board, phone, progress, setProgress }) => {
   const { theme } = useTheme();
-  const [progress, setProgress] = useState<number>(0);
 
   const updateProgress = () => {
     let solableCells = 0;

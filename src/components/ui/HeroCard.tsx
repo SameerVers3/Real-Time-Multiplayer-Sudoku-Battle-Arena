@@ -79,6 +79,7 @@ const HeroCard: React.FC = () => {
       type: joinRoomOptions.roomType,
       maxMember: joinRoomOptions.maxMember,
       currentMembers: 0, // Initialize with 0 current members
+      isActive: true,
       joinedBy: [] // Initialize with an empty array
     });
 

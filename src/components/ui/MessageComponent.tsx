@@ -4,6 +4,7 @@ import IncomingMessage from './IncomingMessage';
 import OutgoingMessage from './OutgoingMessage';
 import Notification from './Notification';
 import { useTheme } from '../contexts/UserContext';
+import { IoIosSend } from "react-icons/io";
 
 interface Message {
   message: string;
@@ -97,8 +98,8 @@ export const MessageComponent: React.FC<MessageProps> = ({ messages, joinedBy, o
 
 
   return (
-    <div className={`flex flex-col max-h-[80vh] rounded-lg shadow-md ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'}`}>
-      <div className={`p-4 ${theme === 'dark' ? 'bg-blue-800' : 'bg-blue-600'} text-white font-bold rounded-t-lg`}>
+    <div className={`flex flex-col max-h-[80vh] rounded-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'}`}>
+      <div className={`p-4 rounded-xl ${theme === 'dark' ? 'bg-gray-900' : 'bg-gray-300'} text-white font-bold rounded-t-lg`}>
         Chat Room
       </div>
       <div className="flex-grow overflow-y-auto p-4 space-y-4">
@@ -137,12 +138,12 @@ export const MessageComponent: React.FC<MessageProps> = ({ messages, joinedBy, o
         })}
         <div ref={messagesEndRef} />
       </div>
-      <div className={`p-4 ${theme === 'dark' ? 'bg-gray-700' : 'bg-white'} border-t ${theme === 'dark' ? 'border-gray-600' : 'border-gray-200'}`}>
-        <div className="relative flex space-x-2">
+      <div className={`p-4 rounded-xl ${theme === 'dark' ? 'bg-gray-700' : 'bg-white'} border-t ${theme === 'dark' ? 'border-gray-600' : 'border-gray-200'}`}>
+        <div className="relative flex gap-2">
           <button
             onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-            className={`px-4 py-2 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-              theme === 'dark' ? 'bg-blue-700 hover:bg-blue-800' : 'bg-blue-600 hover:bg-blue-700'
+            className={`hidden sm:block px-2 py-2 text-white rounded-full focus:outline-none focus:ring-2 focus:ring-gray-500 ${
+              theme === 'dark' ? 'bg-gray-800 hover:bg-gray-900' : 'bg-gray-200 hover:bg-gray-300'
             }`}
           >
             😊
@@ -173,11 +174,14 @@ export const MessageComponent: React.FC<MessageProps> = ({ messages, joinedBy, o
           )}
           <button
             onClick={handleSendMessage}
-            className={`px-4 py-2 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-              theme === 'dark' ? 'bg-blue-700 hover:bg-blue-800' : 'bg-blue-600 hover:bg-blue-700'
+            className={`flex justify-center items-center gap-2 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 ${
+              theme === 'dark' ? 'bg-gray-800 hover:bg-gray-900 text-white font-bold' : 'bg-gray-300 hover:bg-gray-200 font-bold'
             }`}
           >
-            Send
+            <IoIosSend />
+            <div>
+              Send
+            </div>
           </button>
         </div>
       </div>
