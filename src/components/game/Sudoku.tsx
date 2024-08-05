@@ -41,6 +41,7 @@ const Sudoku: React.FC<SudokuProps> = ({ board: initialBoard, onCellChange, decr
   const { theme } = useTheme();
 
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
+    if (remainingLives === 0) return;
     const id = (event.target as HTMLElement).id;
     const [row, col] = id.split("-").map(Number);
 
@@ -117,6 +118,7 @@ const Sudoku: React.FC<SudokuProps> = ({ board: initialBoard, onCellChange, decr
   };
 
   const handleArrowKeyPress = (event: KeyboardEvent) => {
+    if (remainingLives === 0) return;
     if (!selected) return;
 
     let { row, column } = selected;

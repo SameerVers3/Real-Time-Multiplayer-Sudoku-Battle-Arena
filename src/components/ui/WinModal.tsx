@@ -8,7 +8,7 @@ type WinModalProps = {
 };
 
 const WinModal: React.FC<WinModalProps> = ({isWinner, coin}) => {
-
+  console.log("hehe");
   return (
     <dialog id="win-room-modal" className="modal">
       <div className="modal-box w-11/12 max-w-5xl">

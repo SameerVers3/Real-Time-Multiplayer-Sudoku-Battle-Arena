@@ -91,7 +91,7 @@ const Play: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
-  const [showScoreModal, setShowScoreModal] = useState<boolean>(false);
+  const [showScoreModal, setShowScoreModal] = useState<boolean>(true);
   const[gameresults, setGameResults] = useState<GameResults | null>(null);
   const [currentActive, setCurrentActive] = useState<number>(0);
   // const [gameEnded, setGameEnded] = useState<boolean>(false); // New state
@@ -234,6 +234,8 @@ const Play: React.FC = () => {
                 time: new Date().toISOString(),
                 senderID: "system"
               });
+
+              setShowScoreModal(true);
   
               console.log("Game ended successfully");
             } else {
@@ -266,9 +268,12 @@ const Play: React.FC = () => {
   }, [id, database, firestore, updatePlayerCoins]);
 
   const handleDecreaseLives = useCallback(() => {
+    console.log("decreasing lives")
+    console.log(roomState.lives);
     if (state.state === "SIGNED_IN" && state.currentUser && roomState.lives > 0) {
       const newLives = roomState.lives - 1;
       setRoomState(prev => ({ ...prev, lives: newLives }));
+      updateLives(state.currentUser.uid, newLives);
       if (newLives === 0) {
         // Player has lost, update their score to -1
         const dbRef = ref(database, `rooms/${id}/currentMembers/${state.currentUser.uid}`);
@@ -292,7 +297,6 @@ const Play: React.FC = () => {
           });
         }
       }
-      updateLives(state.currentUser.uid, newLives);
     }
   }, [roomState.lives, roomState.joinedBy.length, currentActive, state, endGame, id, database]);
 
@@ -521,7 +525,7 @@ const Play: React.FC = () => {
                 solution: roomData.solution,
                 actual: roomData.board
               } : null,
-              lives: roomData.currentMembers[userId]?.remainingLives || TOTAL_LIVES,
+              lives: roomData.currentMembers[userId]?.remainingLives || 0,
               joinedBy: Object.values(roomData.currentMembers).map((member: RoomMember) => ({
                 userID: member.memberID,
                 userName: member.memberName,
@@ -614,6 +618,11 @@ const Play: React.FC = () => {
   }, [id, state, database, endGame]);
 
   useEffect(() => {
+    const element = document.getElementById("win-room-modal") as HTMLDialogElement;
+    element?.showModal();
+  }, [])
+
+  useEffect(() => {
     const roomsCollection = collection(firestore, "Rooms");
     const roomDocRef = query(roomsCollection, where("roomCode", "==", id));
   
@@ -626,8 +635,6 @@ const Play: React.FC = () => {
           if (doc.isActive === false) {
             console.log("updated");
             setShowScoreModal(true);
-            const element = document.getElementById("win-room-modal") as HTMLDialogElement;
-            element?.showModal();
             console.log(doc.gameResults);
             setGameResults(doc.gameResults);
             console.log(state.currentUser.uid);
@@ -635,7 +642,6 @@ const Play: React.FC = () => {
               console.log("You won");
             }
             else {
-              alert("You lost");
               console.log("You lost");
             }
           }
@@ -668,7 +674,7 @@ const Play: React.FC = () => {
       time={"10:00"}
       onWin={handleGameWin}
       onGameEnd={endGame}
-      deactive={roomState.lives === 0}
+      deactive={false}
     />
   ), [roomState.board, handleCellChange, handleDecreaseLives, roomState.lives, id, roomState.maxMember, roomState.joinedBy, handleGameWin, endGame]);
 
@@ -687,7 +693,7 @@ const Play: React.FC = () => {
 
   if (loading) return <div className="flex items-center justify-center h-screen bg-gray-900"><div className="text-white text-2xl">Loading game...</div></div>;
   if (error) return <div className="flex items-center justify-center h-screen bg-gray-900"><div className="bg-red-600 text-white p-4 rounded-lg shadow-lg">{error}</div></div>;
-  if (!roomState.isActive && !roomState.gameResults) return <div className="flex items-center justify-center h-screen "><RoomLobby roomId={id!} maxMembers={roomState.maxMember} onStartGame={startGame} /></div>;
+  if (!roomState.isActive && !roomState.gameResults && !showScoreModal) return <div className="flex items-center justify-center h-screen "><RoomLobby roomId={id!} maxMembers={roomState.maxMember} onStartGame={startGame} /></div>;
   if (!roomState.board) return <div className="flex items-center justify-center h-screen bg-gray-900"><div className="text-white text-2xl">No game board found.</div></div>;
 
   return (
@@ -706,7 +712,7 @@ const Play: React.FC = () => {
         </div>
       </div>
       {showConfetti && <Confetti />}
-      {showScoreModal && <WinModal isWinner={true} coin={5}/>}
+      {roomState.isActive && <WinModal isWinner={true} coin={5}/>}
     </div>
   );
 };
