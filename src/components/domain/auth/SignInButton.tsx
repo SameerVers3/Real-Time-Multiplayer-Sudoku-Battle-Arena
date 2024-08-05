@@ -32,6 +32,7 @@ export const SignInButton = () => {
           email: user.email,
           displayName: user.displayName,
           photoURL: user.photoURL,
+          coin: 50, // Set the initial coin balance
           createdDate: serverTimestamp(), // Set the creation date
           lastLoginDate: serverTimestamp(), // Set the last login date
           lastUpdatedDate: serverTimestamp() // Set the last updated date

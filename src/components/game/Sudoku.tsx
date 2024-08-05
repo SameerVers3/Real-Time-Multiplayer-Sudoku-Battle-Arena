@@ -28,11 +28,12 @@ interface SudokuProps {
   time: string;
   onWin: () => void;
   onGameEnd: () => void;
+  deactive: boolean;
 }
 
 const options: number[] = [1, 2, 3, 4, 5, 6, 7, 8, 9];
 
-const Sudoku: React.FC<SudokuProps> = ({ board: initialBoard, onCellChange, decreaseLive, totalLives, remainingLives, roomId, maxMembers, joinedBy, time, onWin, onGameEnd }) => {
+const Sudoku: React.FC<SudokuProps> = ({ board: initialBoard, onCellChange, decreaseLive, totalLives, remainingLives, roomId, maxMembers, joinedBy, time, onWin, onGameEnd, deactive }) => {
   const [board, setBoard] = useState<Board>(initialBoard);
   const [selected, setSelected] = useState<SelectedBox | undefined>();
   const [wrong, setWrong] = useState<SelectedBox | undefined>();
@@ -262,6 +263,9 @@ const Sudoku: React.FC<SudokuProps> = ({ board: initialBoard, onCellChange, decr
           onGameEnd={onGameEnd}
         />
       </div>
+      {deactive && (
+        <div className="fixed inset-0 bg-black opacity-50 z-50" />
+      )}
       <div className='block lg:hidden'>
         <BoardDetails 
           totalLives={totalLives}

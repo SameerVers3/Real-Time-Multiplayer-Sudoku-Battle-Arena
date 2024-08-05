@@ -9,7 +9,7 @@ import OthersProgress from "../ui/OthersProgress";
 import { createSudokuGrid } from "../game/generateBoard";
 import { validateAndUpdateRoom } from "../utils/roomUtils";
 import { MessageComponent } from "../ui/MessageComponent";
-import { collection, doc, getDoc, getDocs, query, updateDoc, where } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, onSnapshot, query, updateDoc, where } from "firebase/firestore";
 import Confetti from 'react-confetti';
 import RoomLobby from "../ui/RoomLobby";
 import WinModal from "../ui/WinModal";
@@ -25,6 +25,7 @@ interface RoomMember {
 }
 
 interface Room {
+  currentActive: number;
   isActive: boolean;
   creatorId: string;
   memberHistory: Record<string, any>;
@@ -91,6 +92,8 @@ const Play: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
   const [showScoreModal, setShowScoreModal] = useState<boolean>(false);
+  const[gameresults, setGameResults] = useState<GameResults | null>(null);
+  const [currentActive, setCurrentActive] = useState<number>(0);
   // const [gameEnded, setGameEnded] = useState<boolean>(false); // New state
 
   const startGame = useCallback(() => {
@@ -99,32 +102,54 @@ const Play: React.FC = () => {
       update(roomRef, { 
         isActive: true, 
         gameStartTime: Date.now(),
-        gameEnded: false
+        gameEnded: false,
+        currentActive: roomState.joinedBy.length
       });
       // start the timer thingy
     }
-  }, [roomState.isCreator, id, database]);
+  }, [roomState.isCreator, roomState.joinedBy.length, id, database]);
+
+  const updatePlayerCoins = async (playerId: string, coinChange: number) => {
+    console.log(`Updating coins for player ${playerId} by ${coinChange}`);
+    const playerRef = doc(firestore, `users/${playerId}`);
+    const playerDoc = await getDoc(playerRef);
+  
+    if (playerDoc.exists()) {
+      console.log("player Exists");
+      const currentCoins = playerDoc.data()?.coin || 0;
+      console.log("Current Coins: ", currentCoins);
+      const newCoins = currentCoins + coinChange;
+      console.log("New Coins: ", newCoins);
+  
+      await updateDoc(playerRef, {
+        coin: newCoins
+      });
+    } else {
+      console.error(`Player document for ${playerId} does not exist.`);
+    }
+  };
+  
 
   const endGame = useCallback(async () => {
-    console.log("Game is ended now");
+    console.log("Updating game state...");
   
     if (id) {
       const roomsCollection = collection(firestore, "Rooms");
       const roomQuery = query(roomsCollection, where("roomCode", "==", id));
-
+  
       try {
         const querySnapshot = await getDocs(roomQuery);
         if (!querySnapshot.empty) {
           const roomDocRef = querySnapshot.docs[0].ref;
           const roomDoc = await getDoc(roomDocRef);
           const roomData = roomDoc.data();
-
+  
           const dbRef = ref(database, `rooms/${id}`);
           const roomSnapshot = await get(dbRef);
           const realTimeRoomData = roomSnapshot.val() as Room;
         
           const members = realTimeRoomData?.currentMembers;
-
+  
           if (!roomData?.isActive) {
             return {
               success: false,
@@ -136,33 +161,94 @@ const Play: React.FC = () => {
             let highestScore = -1;
             let winners: string[] = [];
             const scores: { [key: string]: number } = {};
+            let activePlayers = 0;
+  
+            const board = realTimeRoomData.board;
   
             Object.entries(members).forEach(([memberId, memberData]: [string, any]) => {
-              const correctAnswers = memberData.gameBoard.flat().filter((cell: number) => cell !== 0).length;
-              scores[memberId] = correctAnswers;
+              const gameBoard = memberData.gameBoard;
+              const remainingLives = memberData.remainingLives;
               
-              if (correctAnswers > highestScore) {
-                highestScore = correctAnswers;
-                winners = [memberId];
-              } else if (correctAnswers === highestScore) {
-                winners.push(memberId);
+              if (remainingLives > 0) {
+                activePlayers++;
+                const correctAnswers = gameBoard.flat().filter((cell: number) => cell !== 0 && !board.flat().includes(cell)).length;
+                scores[memberId] = correctAnswers;
+  
+                if (correctAnswers > highestScore) {
+                  highestScore = correctAnswers;
+                  winners = [memberId];
+                } else if (correctAnswers === highestScore) {
+                  winners.push(memberId);
+                }
+              } else {
+                scores[memberId] = -1; // Indicate that this player has lost
               }
             });
   
-            const winner = winners.length === 1 ? winners[0] : 'Tie';
-            setRoomState(prev => ({ ...prev, gameResults: { winner, scores }, lives: 0 }));
+            // Update currentActive in realtime database
+            await update(dbRef, { currentActive: activePlayers });
   
-            setGameEnded(true);
-            
-            await updateDoc(roomDoc.ref, {
-              isActive: false,
-              gameEnded: true,
-              gameResults: { winner, scores }
-            });
-
-            const element = document.getElementById("win-room-modal") as HTMLDialogElement;
-            element?.showModal();
+            // Only end the game if there's one or fewer active players
+            if (activePlayers <= 1) {
+              const validWinners = winners.filter(memberId => scores[memberId] !== -1);
   
+              // Determine the result and apply coin adjustments
+              if (validWinners.length > 1) {
+                console.log("The game is a tie. No coin adjustments are made.");
+              } else if (validWinners.length === 1) {
+                const winner = validWinners[0];
+                const losers = Object.keys(members).filter(memberId => memberId !== winner);
+  
+                // Increase coins for the winner
+                await updatePlayerCoins(winner, 5);
+  
+                // Decrease coins for losers
+                await Promise.all(losers.map(loser => updatePlayerCoins(loser, -5)));
+  
+                // Transfer coins from losers to the winner
+                const totalLoss = losers.length * 5;
+                await updatePlayerCoins(winner, totalLoss);
+              }
+  
+              const winner = validWinners.length === 1 ? validWinners[0] : 'Tie';
+              setRoomState(prev => ({ ...prev, gameResults: { winner, scores }, lives: 0 }));
+  
+              await updateDoc(roomDocRef, {
+                isActive: false,
+                gameEnded: true,
+                gameResults: { winner, scores }
+              });
+  
+              // Update realtime database
+              await update(dbRef, {
+                isActive: false,
+                gameEnded: true,
+                gameResults: { winner, scores }
+              });
+  
+              // Notify all players about game end
+              const chatRef = ref(database, `rooms/${id}/chat`);
+              await push(chatRef, {
+                message: `Game ended. ${winner === 'Tie' ? 'It\'s a tie!' : `${members[winner].memberName} wins!`}`,
+                messageType: "notification",
+                time: new Date().toISOString(),
+                senderID: "system"
+              });
+  
+              console.log("Game ended successfully");
+            } else {
+              // Update scores without ending the game
+              await updateDoc(roomDocRef, {
+                currentScores: scores
+              });
+  
+              // Update realtime database
+              await update(dbRef, {
+                currentScores: scores
+              });
+  
+              console.log("Scores updated, game continues");
+            }
           } else {
             console.error("Current members data is missing or not an object.");
           }
@@ -177,7 +263,38 @@ const Play: React.FC = () => {
         }
       }
     }
-  }, [id, database, firestore]);
+  }, [id, database, firestore, updatePlayerCoins]);
+
+  const handleDecreaseLives = useCallback(() => {
+    if (state.state === "SIGNED_IN" && state.currentUser && roomState.lives > 0) {
+      const newLives = roomState.lives - 1;
+      setRoomState(prev => ({ ...prev, lives: newLives }));
+      if (newLives === 0) {
+        // Player has lost, update their score to -1
+        const dbRef = ref(database, `rooms/${id}/currentMembers/${state.currentUser.uid}`);
+        
+        update(dbRef, { score: -1, isLost: true });
+
+        // If more than two players, update loser status
+        if (roomState.joinedBy.length > 2) {
+          update(dbRef, { isLost: true });
+        }
+        
+        // If only two players left, end the game
+        if (currentActive <= 2) {
+          endGame();
+        } else {
+          // Decrease currentActive count
+          const roomRef = ref(database, `rooms/${id}`);
+          get(roomRef).then((snapshot) => {
+            const currentActiveCount = snapshot.val().currentActive || 0;
+            update(roomRef, { currentActive: currentActiveCount - 1 });
+          });
+        }
+      }
+      updateLives(state.currentUser.uid, newLives);
+    }
+  }, [roomState.lives, roomState.joinedBy.length, currentActive, state, endGame, id, database]);
 
   const addUserToRoom = useCallback(async (roomId: string, userId: string, photoURL: string | null, userName: string | null): Promise<void> => {
     const dbRef = ref(database, `rooms/${roomId}`);
@@ -265,7 +382,8 @@ const Play: React.FC = () => {
           memberHistory: {},
           chat: [],
           creatorId: userId,
-          isActive: false
+          isActive: false,
+          currentActive: 0
         };
   
         await set(dbRef, newRoom);
@@ -394,6 +512,7 @@ const Play: React.FC = () => {
         const unsubscribe = onValue(roomRef, snapshot => {
           if (snapshot.exists()) {
             const roomData = snapshot.val() as Room;
+            setCurrentActive(roomData.currentActive || 0);
             setRoomState(prev => ({
               ...prev,
               isActive: Boolean(roomData.isActive),
@@ -436,17 +555,6 @@ const Play: React.FC = () => {
     }
   }, [state, listenForMessages]);
 
-  const handleDecreaseLives = useCallback(() => {
-    if (state.state === "SIGNED_IN" && state.currentUser && roomState.lives > 0) {
-      const newLives = roomState.lives - 1;
-      if (newLives === 0) {
-        endGame();
-      }
-      setRoomState(prev => ({ ...prev, lives: newLives }));
-      updateLives(state.currentUser.uid, newLives);
-    }
-  }, [roomState.lives, state, updateLives, endGame]);
-
   const handleCellChange = useCallback((row: number, col: number, value: number) => {
     if (roomState.board && state.state === "SIGNED_IN" && state.currentUser) {
       const updatedBoard = roomState.board.grid.map(r => [...r]);
@@ -479,8 +587,9 @@ const Play: React.FC = () => {
           const roomData = (await get(roomRef)).val() as Room;
   
           if (roomData.currentMembers && roomData.currentMembers[userId]) {
-            const userRef = ref(database, `rooms/${id}/currentMembers/${userId}`);
-            const userHistoryRef = ref(database, `rooms/${id}/memberHistory/${userId}`);
+            // Decrease currentActive count
+            const currentActiveCount = roomData.currentActive || 0;
+            await update(roomRef, { currentActive: currentActiveCount - 1 });
 
             const chatRef = ref(database, `rooms/${id}/chat`);
             await push(chatRef, {
@@ -489,13 +598,10 @@ const Play: React.FC = () => {
               time: new Date().toISOString(),
               senderID: "system"
             });
-            
-            await update(userHistoryRef, roomData.currentMembers[userId]);
-            await remove(userRef);
-            
-            if (roomState.board) {
-              const gameBoardRef = ref(database, `rooms/${id}/memberHistory/${userId}/gameBoard`);
-              await set(gameBoardRef, roomState.board.grid);
+
+            // If only one player left, end the game
+            if (currentActiveCount - 1 <= 1) {
+              endGame();
             }
           }
         } catch (error) {
@@ -505,8 +611,43 @@ const Play: React.FC = () => {
   
       cleanupRoom();
     }
-  }, [id, state, database, roomState.board]);
+  }, [id, state, database, endGame]);
+
+  useEffect(() => {
+    const roomsCollection = collection(firestore, "Rooms");
+    const roomDocRef = query(roomsCollection, where("roomCode", "==", id));
   
+    const unsubscribe = onSnapshot(roomDocRef, (snapshot) => {
+      console.log("Current data: ", snapshot.docs[0].data());
+      if (!snapshot.empty) {
+        const doc = snapshot.docs[0].data(); // Assuming you expect only one document
+        console.log(doc);
+          console.log("hehe")
+          if (doc.isActive === false) {
+            console.log("updated");
+            setShowScoreModal(true);
+            const element = document.getElementById("win-room-modal") as HTMLDialogElement;
+            element?.showModal();
+            console.log(doc.gameResults);
+            setGameResults(doc.gameResults);
+            console.log(state.currentUser.uid);
+            if ((gameresults?.winner ==   state.currentUser.uid)) {
+              console.log("You won");
+            }
+            else {
+              alert("You lost");
+              console.log("You lost");
+            }
+          }
+      }
+    }, (error) => {
+      console.error("Error fetching document: ", error);
+    });
+  
+    return () => {
+      unsubscribe();
+    };
+  }, [firestore, id]);  
   useEffect(() => {
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => {
@@ -527,6 +668,7 @@ const Play: React.FC = () => {
       time={"10:00"}
       onWin={handleGameWin}
       onGameEnd={endGame}
+      deactive={roomState.lives === 0}
     />
   ), [roomState.board, handleCellChange, handleDecreaseLives, roomState.lives, id, roomState.maxMember, roomState.joinedBy, handleGameWin, endGame]);
 
@@ -543,16 +685,9 @@ const Play: React.FC = () => {
     />
   ), [roomState.messages, roomState.joinedBy, sendMessage, state]);
 
-  useEffect(() => {
-    if (roomState.gameResults) {
-      // Show modal when game results are available
-      setShowScoreModal(true);
-    }
-  }, [roomState.gameResults]);
-
   if (loading) return <div className="flex items-center justify-center h-screen bg-gray-900"><div className="text-white text-2xl">Loading game...</div></div>;
   if (error) return <div className="flex items-center justify-center h-screen bg-gray-900"><div className="bg-red-600 text-white p-4 rounded-lg shadow-lg">{error}</div></div>;
-  if (!roomState.isActive && !gameEnded && !roomState.gameResults) return <div className="flex items-center justify-center h-screen "><RoomLobby roomId={id!} maxMembers={roomState.maxMember} onStartGame={startGame} /></div>;
+  if (!roomState.isActive && !roomState.gameResults) return <div className="flex items-center justify-center h-screen "><RoomLobby roomId={id!} maxMembers={roomState.maxMember} onStartGame={startGame} /></div>;
   if (!roomState.board) return <div className="flex items-center justify-center h-screen bg-gray-900"><div className="text-white text-2xl">No game board found.</div></div>;
 
   return (
@@ -571,7 +706,7 @@ const Play: React.FC = () => {
         </div>
       </div>
       {showConfetti && <Confetti />}
-      {(showScoreModal || gameEnded ) && <WinModal/>}
+      {showScoreModal && <WinModal isWinner={true} coin={5}/>}
     </div>
   );
 };

@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuthState, useSignOut, useTheme } from "../contexts/UserContext";
+import NavCoin from "./NavCoin";
 
 const Nav = () => {
   const { state } = useAuthState();
@@ -16,30 +17,23 @@ const Nav = () => {
     setTheme(newTheme);
   };
 
-  const links = [
-    {
-      link: "/challenge",
-      name: "Challenge",
-      icon: "",
-    },
-    {
-      link: "/play",
-      name: "Play",
-      icon: "",
-    },
-  ];
-
-  React.useEffect(() => {
+  useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
   }, [theme]);
+
+  const links = [
+    { link: "/challenge", name: "Challenge", icon: "" },
+    { link: "/play", name: "Play", icon: "" },
+  ];
 
   return (
     <nav className="p-1 px-12 flex items-center justify-between">
       <div className="flex justify-between items-center w-full">
         <a className="text-2xl" href="/">
           Sudoku
+          {/* <img src={coin} alt="coin" className="w-10 h-10" /> */}
         </a>
-
+        <NavCoin />
         <div>
           {links.map((link) => (
             <Link key={link.link} to={link.link} className="hover:text-blue-500">
@@ -75,7 +69,6 @@ const Nav = () => {
 
           <div>
             <label className="swap swap-rotate">
-              {/* this hidden checkbox controls the state */}
               <input
                 type="checkbox"
                 checked={theme === "dark"}
