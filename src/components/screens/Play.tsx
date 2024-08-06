@@ -77,6 +77,8 @@ const Play: React.FC = () => {
     isActive: boolean;
     isCreator: boolean;
     gameResults: GameResults | null;
+    gameStartTime?: number;
+    gameEnded: boolean;
   }>({
     joinedBy: [],
     maxMember: 0,
@@ -86,6 +88,8 @@ const Play: React.FC = () => {
     isActive: false,
     isCreator: false,
     gameResults: null,
+    gameStartTime: undefined,
+    gameEnded: false,
   });
 
   const [loading, setLoading] = useState<boolean>(true);
@@ -95,19 +99,36 @@ const Play: React.FC = () => {
   const[gameresults, setGameResults] = useState<GameResults | null>(null);
   const [currentActive, setCurrentActive] = useState<number>(0);
   // const [gameEnded, setGameEnded] = useState<boolean>(false); // New state
+  
 
-  const startGame = useCallback(() => {
-    if (roomState.isCreator && id) {
-      const roomRef = ref(database, `rooms/${id}`);
-      update(roomRef, { 
-        isActive: true, 
-        gameStartTime: Date.now(),
-        gameEnded: false,
-        currentActive: roomState.joinedBy.length
-      });
-      // start the timer thingy
-    }
-  }, [roomState.isCreator, roomState.joinedBy.length, id, database]);
+  const startGame = useCallback((isCreator: boolean) => {
+  if (isCreator && id) {
+    console.log("Starting game with Room ID:", id);
+    console.log("Current Room State:", roomState);
+
+    const roomRef = ref(database, `rooms/${id}`);
+    const gameStartTime = Date.now();
+
+    console.log("Updating Database at:", roomRef);
+    console.log("Update Data:", {
+      isActive: true,
+      gameStartTime: gameStartTime,
+      gameEnded: false,
+      currentActive: roomState.joinedBy.length
+    });
+
+    update(roomRef, { 
+      isActive: true,
+      gameStartTime: gameStartTime,
+      gameEnded: false,
+      currentActive: roomState.joinedBy.length
+    })
+
+    console.log("Game started successfully");
+  } else {
+    console.log("Not the room creator or no room ID");
+  }
+}, [roomState.isCreator, roomState.joinedBy.length, id, database]);
 
   const updatePlayerCoins = async (playerId: string, coinChange: number) => {
     console.log(`Updating coins for player ${playerId} by ${coinChange}`);
@@ -693,7 +714,7 @@ const Play: React.FC = () => {
 
   if (loading) return <div className="flex items-center justify-center h-screen bg-gray-900"><div className="text-white text-2xl">Loading game...</div></div>;
   if (error) return <div className="flex items-center justify-center h-screen bg-gray-900"><div className="bg-red-600 text-white p-4 rounded-lg shadow-lg">{error}</div></div>;
-  if (!roomState.isActive && !roomState.gameResults && !showScoreModal) return <div className="flex items-center justify-center h-screen "><RoomLobby roomId={id!} maxMembers={roomState.maxMember} onStartGame={startGame} /></div>;
+  if (!roomState.isActive && !roomState.gameResults ) return <div className="flex items-center justify-center h-screen "><RoomLobby roomId={id!} maxMembers={roomState.maxMember} onStartGame={startGame} /></div>;
   if (!roomState.board) return <div className="flex items-center justify-center h-screen bg-gray-900"><div className="text-white text-2xl">No game board found.</div></div>;
 
   return (
@@ -712,7 +733,7 @@ const Play: React.FC = () => {
         </div>
       </div>
       {showConfetti && <Confetti />}
-      {roomState.isActive && <WinModal isWinner={true} coin={5}/>}
+      {showScoreModal && <WinModal isWinner={true} coin={5}/>}
     </div>
   );
 };

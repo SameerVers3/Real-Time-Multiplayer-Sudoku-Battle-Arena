@@ -8,7 +8,7 @@ import RoomId from './RoomId';
 interface RoomLobbyProps {
   roomId: string;
   maxMembers: number;
-  onStartGame: () => void;
+  onStartGame: (isCreator: boolean) => void;
 }
 
 interface LobbyMember {
@@ -45,10 +45,10 @@ const RoomLobby: React.FC<RoomLobbyProps> = ({ roomId, maxMembers, onStartGame }
 
   const handleStartGame = () => {
     if (isCreator) {
-      const roomRef = ref(database, `rooms/${roomId}`);
-      update(roomRef, { isActive: true }).then(() => {
-        onStartGame();
-      });
+      console.log("hehe");
+      onStartGame(isCreator);
+    } else {
+      console.log("hehe");
     }
   };
 

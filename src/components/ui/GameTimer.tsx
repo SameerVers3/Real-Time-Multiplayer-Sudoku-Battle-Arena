@@ -8,7 +8,7 @@ interface GameTimerProps {
   onGameEnd: () => void;
 }
 
-const GAME_DURATION = 10 * 60 * 1000; // 10 minutes in milliseconds
+const GAME_DURATION = 5000; // 10 minutes in milliseconds
 
 const GameTimer: React.FC<GameTimerProps> = ({ roomId, onGameEnd }) => {
   const [timeRemaining, setTimeRemaining] = useState(GAME_DURATION);
@@ -17,21 +17,27 @@ const GameTimer: React.FC<GameTimerProps> = ({ roomId, onGameEnd }) => {
 
   const endGame = useCallback(() => {
     const roomRef = ref(database, `rooms/${roomId}`);
+    console.log("game Ended")
     update(roomRef, { isActive: false, gameEnded: true }).then(() => {
       onGameEnd();
     });
+    console.log("game Byebye ")
   }, [database, roomId, onGameEnd]);
 
   useEffect(() => {
     const roomRef = ref(database, `rooms/${roomId}`);
     let timerInterval: NodeJS.Timeout;
-
+    console.log("Timer");
     const unsubscribe = onValue(roomRef, (snapshot) => {
       if (snapshot.exists()) {
+        console.log("Snap Shot")
         const roomData = snapshot.val();
+        console.log(roomData);
         if (roomData.gameStartTime && !roomData.gameEnded) {
           const now = Date.now();
+          console.log(now);
           const elapsed = now - roomData.gameStartTime;
+          
           const remaining = Math.max(0, GAME_DURATION - elapsed);
 
           setTimeRemaining(remaining);
